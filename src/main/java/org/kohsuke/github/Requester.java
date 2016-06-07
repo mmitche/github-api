@@ -59,6 +59,7 @@ import javax.annotation.WillClose;
 
 import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
 import static org.kohsuke.github.GitHub.*;
 
 /**
@@ -235,6 +236,7 @@ class Requester {
         }
 
         while (true) {// loop while API rate limit is hit
+            LOGGER.log(INFO, "_to for: " + tailApiUrl);
             setupConnection(root.getApiURL(tailApiUrl));
 
             buildRequest();
@@ -271,6 +273,7 @@ class Requester {
      */
     public int asHttpStatusCode(String tailApiUrl) throws IOException {
         while (true) {// loop while API rate limit is hit
+            LOGGER.log(INFO, "status code for: " + tailApiUrl);
             method("GET");
             setupConnection(root.getApiURL(tailApiUrl));
 
@@ -286,6 +289,7 @@ class Requester {
 
     public InputStream asStream(String tailApiUrl) throws IOException {
         while (true) {// loop while API rate limit is hit
+            LOGGER.log(INFO, "asStream for: " + tailApiUrl);
             setupConnection(root.getApiURL(tailApiUrl));
 
             buildRequest();
@@ -341,6 +345,7 @@ class Requester {
      * Every iterator call reports a new batch.
      */
     /*package*/ <T> Iterator<T> asIterator(String tailApiUrl, Class<T> type, int pageSize) {
+        
         method("GET");
 
         if (pageSize!=0)
@@ -411,6 +416,7 @@ class Requester {
 
             try {
                 while (true) {// loop while API rate limit is hit
+                    LOGGER.log(INFO, "page for: " + url);
                     setupConnection(url);
                     try {
                         next = parse(type,null);

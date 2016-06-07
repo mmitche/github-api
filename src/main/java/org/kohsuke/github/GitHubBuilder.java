@@ -14,6 +14,8 @@ import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.Properties;
 
+import org.kohsuke.github.GitHub;
+
 /**
  * Configures connection details and produces {@link GitHub}.
  *
