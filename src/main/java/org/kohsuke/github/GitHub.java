@@ -77,8 +77,10 @@ public class GitHub {
      */
     /*package*/ final String encodedAuthorization;
 
-    private final Map<String,GHUser> users = new Hashtable<String, GHUser>();
-    private final Map<String,GHOrganization> orgs = new Hashtable<String, GHOrganization>();
+    private final Map<String,GHUser> users;
+    private final Map<String,GHOrganization> orgs;
+    // Cache of myself object.
+    private GHMyself myself;
     private final String apiUrl;
 
     /*package*/ final RateLimitHandler rateLimitHandler;
@@ -138,6 +140,8 @@ public class GitHub {
             }
         }
 
+        users = new Hashtable<String, GHUser>();
+        orgs = new Hashtable<String, GHOrganization>();
         this.rateLimitHandler = rateLimitHandler;
 
         if (login==null && encodedAuthorization!=null)
@@ -280,16 +284,13 @@ public class GitHub {
         // scope the synchronization separately around the map retrieval and update (or use a concurrent hash)
         // map, the point is to avoid making unnecessary GH API calls, which are expensive from
         // an API rate standpoint
-        synchronized (users) {
-            GHUser cachedUser = users.get(this.login);
-            if (cachedUser != null && cachedUser instanceof GHMyself) {
-                return (GHMyself)cachedUser;
-            }
-
+        synchronized (this) {
+            if (this.myself != null) return myself;
+            
             GHMyself u = retrieve().to("/user", GHMyself.class);
 
             u.root = this;
-            users.put(u.getLogin(), u);
+            this.myself = u;
             return u;
         }
     }
@@ -314,7 +315,7 @@ public class GitHub {
         }
     }
 
-
+    
     /**
      * clears all cached data in order for external changes (modifications and del
      */
