@@ -31,6 +31,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
@@ -234,7 +235,7 @@ class Requester {
                 }
             }
         }
-
+        
         while (true) {// loop while API rate limit is hit
             LOGGER.log(INFO, "_to for: " + tailApiUrl);
             setupConnection(root.getApiURL(tailApiUrl));
@@ -550,15 +551,24 @@ class Requester {
             root.rateLimitHandler.onError(e,uc);
             return;
         }
-
+        
         InputStream es = wrapStream(uc.getErrorStream());
         try {
             if (es!=null) {
+                String errorString = IOUtils.toString(es, "UTF-8");
+                // Check to see whether we hit a 403, and the message indicates the
+                // abuse handler (occurs on too many concurrent requests)
+                if (responseCode == HttpURLConnection.HTTP_FORBIDDEN && 
+                    errorString.contains("You have triggered an abuse detection mechanism.")) {
+                    this.root.abuseLimitHandler.onError(e,uc);
+                    return;
+                }
+                
                 if (e instanceof FileNotFoundException) {
                     // pass through 404 Not Found to allow the caller to handle it intelligently
-                    throw (IOException) new FileNotFoundException(IOUtils.toString(es, "UTF-8")).initCause(e);
+                    throw (IOException) new FileNotFoundException(errorString).initCause(e);
                 } else
-                    throw (IOException) new IOException(IOUtils.toString(es, "UTF-8")).initCause(e);
+                    throw (IOException) new IOException(errorString).initCause(e);
             } else
                 throw e;
         } finally {

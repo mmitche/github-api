@@ -32,6 +32,7 @@ public class GitHubBuilder {
     private HttpConnector connector;
 
     private RateLimitHandler rateLimitHandler = RateLimitHandler.WAIT;
+    private RateLimitHandler abuseLimitHandler = RateLimitHandler.ABUSE;
 
     public GitHubBuilder() {
     }
@@ -195,6 +196,6 @@ public class GitHubBuilder {
     }
 
     public GitHub build() throws IOException {
-        return new GitHub(endpoint, user, oauthToken, password, connector, rateLimitHandler);
+        return new GitHub(endpoint, user, oauthToken, password, connector, rateLimitHandler, abuseLimitHandler);
     }
 }
